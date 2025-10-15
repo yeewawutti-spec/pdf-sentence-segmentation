@@ -223,7 +223,7 @@ def pdf_to_clean_sentences(pdf_path: str, out_prefix: str):
 # 🌐 Streamlit UI
 # =========================
 st.set_page_config(page_title="PDF Sentence Cleaner", page_icon="📘", layout="wide")
-st.title("📘 PDF Sentence Cleaner — เวอร์ชันตรงกับโค้ดของคุณ")
+st.title("📘 PDF Sentence Cleaner — By 802 Squad")
 
 uploaded_file = st.file_uploader("อัปโหลดไฟล์ PDF", type=["pdf"])
 
@@ -255,6 +255,7 @@ if uploaded_file is not None:
 
         with st.expander("🔍 ดูตัวอย่าง (20 บรรทัดแรก)"):
             st.dataframe(df_output.head(20))
+
 
 
 
