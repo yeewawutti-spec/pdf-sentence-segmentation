@@ -237,14 +237,61 @@ st.sidebar.markdown("""
 
 st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025  | Developed by 802 Squad</p>", unsafe_allow_html=True)
 st.markdown("""
-    <style>
-    /* พื้นหลังทั้งหน้า */
-    .stApp {
-        background-color: #FFF8F0; /* สีส้มอ่อนแบบอบอุ่น */
-        color: #333333; /* สีตัวอักษร */
-    }
-    </style>
+<style>
+/* ===== 🎨 ไล่เฉดพื้นหลังโทนอบอุ่น (Soft Orange Gradient) ===== */
+.stApp {
+    background: linear-gradient(180deg, #FFF4E0 0%, #FFF8F2 40%, #FFFFFF 100%);
+    color: #3b3b3b;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* ===== Header ===== */
+h1, h2, h3, h4, h5 {
+    color: #e67300 !important;
+    font-weight: 700;
+}
+
+/* ===== เส้นคั่นแบบบาง ๆ สีส้มอ่อน ===== */
+hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(255,153,51,0.8) 0%, rgba(255,204,153,0.2) 100%);
+    border-radius: 2px;
+}
+
+/* ===== กล่อง Upload Zone ===== */
+[data-testid="stFileUploader"] {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px dashed #ffa94d;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0px 2px 10px rgba(255, 170, 85, 0.15);
+}
+
+/* ===== ปุ่ม Browse ===== */
+button[kind="secondary"] {
+    background: linear-gradient(90deg, #ffb84d, #ff944d);
+    color: white !important;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    transition: 0.3s;
+}
+button[kind="secondary"]:hover {
+    background: linear-gradient(90deg, #ff944d, #ff751a);
+}
+
+/* ===== Footer ===== */
+footer, .footer {
+    color: #b85c00;
+    text-align: center;
+    font-weight: 500;
+    margin-top: 40px;
+}
+</style>
 """, unsafe_allow_html=True)
+
+
 
 
 
