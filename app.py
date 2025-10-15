@@ -236,6 +236,17 @@ st.sidebar.markdown("""
 
 
 st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025  | Developed by 802 Squad</p>", unsafe_allow_html=True)
+st.markdown("""
+    <style>
+    /* พื้นหลังทั้งหน้า */
+    .stApp {
+        background-color: #FFF8F0; /* สีส้มอ่อนแบบอบอุ่น */
+        color: #333333; /* สีตัวอักษร */
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+
 
 
 
