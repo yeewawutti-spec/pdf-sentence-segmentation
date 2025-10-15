@@ -236,13 +236,33 @@ st.sidebar.markdown("""
 
 
 st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025  | Developed by 802 Squad</p>", unsafe_allow_html=True)
+st.markdown("""
+<style>
 [data-testid="stFileUploader"] {
-    background: rgba(255, 255, 255, 0.95);       /* สีพื้นในกรอบ */
-    border: 2px dashed #B97A3D;                  /* ✅ สีน้ำตาลทอง (เหมือนในภาพ) */
-    border-radius: 15px;                         /* มุมโค้ง */
-    padding: 25px;                               /* ระยะห่างในกล่อง */
-    box-shadow: 0px 2px 8px rgba(185, 122, 61, 0.25);  /* เงาโทนน้ำตาลอ่อน */
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px dashed #B97A3D;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0px 2px 8px rgba(185, 122, 61, 0.25);
 }
+
+/* ปุ่ม Browse */
+button[kind="secondary"] {
+    background: linear-gradient(90deg, #E67300, #FF944D);
+    color: white !important;
+    font-weight: 600;
+    border-radius: 10px;
+    border: none;
+    transition: all 0.3s ease;
+}
+button[kind="secondary"]:hover {
+    background: linear-gradient(90deg, #FF944D, #FFB066);
+    transform: scale(1.03);
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 
 
 
