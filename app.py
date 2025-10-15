@@ -253,7 +253,7 @@ h1, h2, h3 {
 
 /* ===== คำอธิบายใต้หัวข้อ ===== */
 .subtitle {
-    color: #2E8B57; /* สีเขียวเข้ม */
+    color: #006400; /* สีเขียวเข้ม */
     font-size: 1.05rem;
     font-weight: 500;
     margin-top: -10px;
@@ -303,6 +303,7 @@ footer, .footer {
 
 # ===== ส่วนหัว + คำอธิบาย =====
 st.markdown("<hr>", unsafe_allow_html=True)
+
 
 
 
