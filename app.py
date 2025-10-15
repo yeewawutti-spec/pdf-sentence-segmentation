@@ -236,73 +236,7 @@ st.sidebar.markdown("""
 
 
 st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025  | Developed by 802 Squad</p>", unsafe_allow_html=True)
-st.markdown("""
-<style>
-/* ===== 🎨 พื้นหลัง Mocha Brown ===== */
-.stApp {
-    background: linear-gradient(180deg, #EDE0D4 0%, #E6CCB2 40%, #F3EDE4 100%);
-    color: #3B2F2F; /* สีตัวอักษรหลัก */
-    font-family: "Segoe UI", sans-serif;
-}
 
-/* ===== หัวข้อหลัก ===== */
-h1, h2, h3 {
-    color: #1E1E1E !important;  /* สีดำ */
-    font-weight: 800;
-}
-
-/* ===== คำอธิบายใต้หัวข้อ ===== */
-.subtitle {
-    color: #006400; /* สีเขียวเข้ม */
-    font-size: 1.05rem;
-    font-weight: 500;
-    margin-top: -10px;
-    margin-bottom: 25px;
-}
-
-/* ===== เส้นคั่น ===== */
-hr {
-    border: none;
-    height: 2px;
-    background: linear-gradient(90deg, #A0522D 0%, #C19A6B 100%);
-    border-radius: 2px;
-}
-
-/* ===== Upload Zone ===== */
-[data-testid="stFileUploader"] {
-    background: rgba(255, 255, 255, 0.85);
-    border: 2px dashed #B8860B;
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0px 2px 10px rgba(139, 69, 19, 0.15);
-}
-
-/* ===== ปุ่ม Browse ===== */
-button[kind="secondary"] {
-    background: linear-gradient(90deg, #E67300, #FF944D);
-    color: white !important;
-    font-weight: 600;
-    border-radius: 10px;
-    border: none;
-    transition: all 0.3s ease;
-}
-button[kind="secondary"]:hover {
-    background: linear-gradient(90deg, #FF944D, #FFB066);
-    transform: scale(1.03);
-}
-
-/* ===== Footer ===== */
-footer, .footer {
-    color: #5A3E2B;
-    text-align: center;
-    font-weight: 600;
-    margin-top: 40px;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ===== ส่วนหัว + คำอธิบาย =====
-st.markdown("<hr>", unsafe_allow_html=True)
 
 
 
