@@ -211,9 +211,9 @@ if uploaded_file is not None:
     output.seek(0)
     xlsx_name = f"{base_name}_cleaned.xlsx"
 
-    st.success(f"✅ เสร็จสิ้น — ตัดตามโค้ดของคุณทุกขั้นตอน ({base_name})")
+    st.success(f"✅ ประมวลผลเสร็จสิ้น! ({base_name})")
     st.download_button(
-        f"⬇️ ดาวน์โหลดไฟล์ผลลัพธ์ ({xlsx_name})",
+        f"📤 ดาวน์โหลดไฟล์ Excel ({xlsx_name})",
         data=output.getvalue(),
         file_name=xlsx_name,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -236,6 +236,7 @@ st.sidebar.markdown("""
 
 
 st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025  | Developed by 802 Squad</p>", unsafe_allow_html=True)
+
 
 
 
