@@ -1,102 +1,77 @@
 # -*- coding: utf-8 -*-
 """
-PDF Sentence Cleaner — Streamlit App
-เวอร์ชันตรงกับโค้ดต้นฉบับของคุณ (draft_no_3) 
-เพิ่มระบบ:
-✅ auto rename ตามชื่อไฟล์ PDF ที่อัปโหลด
-✅ ป้องกัน StreamlitDuplicateElementId
-✅ รองรับ header/footer, bold remover, strict ALLCAPS, และ export xlsx
+PDF Sentence Cleaner — Orange Theme Edition
+เวอร์ชันตรงกับโค้ดของคุณ (draft_no_3) + ตกแต่งสีส้มอบอุ่น
 """
 
 import os
 import io
 import re
-import csv
-import math
-import fitz  # PyMuPDF
+import fitz
 import nltk
 import spacy
 import pandas as pd
 import unicodedata
 import streamlit as st
+import time
 
-# =========================
+# =============================
 # 🔧 Setup
-# =========================
+# =============================
 nltk.download("punkt", quiet=True)
 nltk.download("punkt_tab", quiet=True)
 
-_SPACY_OK = True
 try:
     nlp = spacy.load("en_core_web_sm")
+    _SPACY_OK = True
 except Exception:
-    _SPACY_OK = False
     nlp = None
+    _SPACY_OK = False
 
-# =========================
-# 🧠 Core Functions
-# =========================
+# =============================
+# 🧠 Functions
+# =============================
 
-def extract_text_from_pdf_positional_auto(
-    file_path: str,
-    header_margin: float = 60.0,
-    footer_margin: float = 60.0,
-    left_margin: float = 0.0,
-    right_margin: float = 0.0,
-    granularity: str = "spans",
-    remove_bold_all: bool = True,
-    remove_bold_lines: bool = False,
-):
+def extract_text_from_pdf_positional_auto(file_path, header_margin=60.0, footer_margin=60.0, left_margin=0.0, right_margin=0.0,
+                                          remove_bold_all=True):
     """Extract text by removing header/footer and bold spans automatically."""
     def _is_inside(bbox, left, top, right, bottom):
         x0, y0, x1, y1 = bbox
         return (y1 <= bottom and y0 >= top and x0 >= left and x1 <= right)
 
-    def _span_is_bold(span) -> bool:
+    def _span_is_bold(span):
         font = span.get("font", "") or ""
         flags = int(span.get("flags", 0) or 0)
-        by_name = bool(re.search(r"(?i)(bold|black|heavy|semibold|demi)", font))
-        by_flags = bool(flags & 2)
-        return by_name or by_flags
+        return bool(re.search(r"(?i)(bold|black|heavy|semibold|demi)", font)) or bool(flags & 2)
 
     pages_text = []
     with fitz.open(file_path) as doc:
         for page in doc:
-            top = page.rect.y0 + header_margin
-            bottom = page.rect.y1 - footer_margin
-            left = page.rect.x0 + left_margin
-            right = page.rect.x1 - right_margin
-
+            top, bottom = page.rect.y0 + header_margin, page.rect.y1 - footer_margin
+            left, right = page.rect.x0 + left_margin, page.rect.x1 - right_margin
             pdict = page.get_text("dict")
             line_buf = []
-
             for block in pdict.get("blocks", []):
-                if block.get("type", 0) != 0:
-                    continue
+                if block.get("type", 0) != 0: continue
                 for line in block.get("lines", []):
                     spans_in_line = []
                     for span in line.get("spans", []):
                         text = span.get("text", "")
                         bbox = span.get("bbox", None)
-                        if not bbox or not text:
-                            continue
-                        if not _is_inside(bbox, left, top, right, bottom):
-                            continue
-                        if remove_bold_all and _span_is_bold(span):
-                            continue
+                        if not bbox or not text: continue
+                        if not _is_inside(bbox, left, top, right, bottom): continue
+                        if remove_bold_all and _span_is_bold(span): continue
                         spans_in_line.append(text)
                     if spans_in_line:
                         merged = re.sub(r"[ \t]+", " ", "".join(spans_in_line)).strip()
-                        if merged:
-                            line_buf.append(merged)
-            page_text = "\n".join(line_buf)
-            pages_text.append(page_text)
+                        if merged: line_buf.append(merged)
+            pages_text.append("\n".join(line_buf))
     return "\n".join(pages_text)
 
-# --- Utilities ---
+
 def help_ie(s: str) -> str:
-    s = re.sub(r"\bi\.e\.(?=\s*\w)(?!\s*,)", "i.e.,", s, flags=re.IGNORECASE)
-    s = re.sub(r"\be\.g\.(?=\s*\w)(?!\s*,)", "e.g.,", s, flags=re.IGNORECASE)
+    s = re.sub(r"\bi\.e\.(?=\s*\w)(?!\s*,)", "i.e.,", s, flags=re.I)
+    s = re.sub(r"\be\.g\.(?=\s*\w)(?!\s*,)", "e.g.,", s, flags=re.I)
     return s
 
 def tokenize_sentences(text: str):
@@ -109,8 +84,7 @@ def remove_special_chars(sents): return [s.translate(str.maketrans("", "", "•�
 def split_bullet(sents):
     out = []
     for s in sents:
-        parts = [p.strip() for p in re.split(r"[•]", s) if p.strip()]
-        out.extend(parts)
+        out.extend([p.strip() for p in re.split(r"[•]", s) if p.strip()])
     return out
 def split_number_bullet(sents):
     out = []
@@ -132,23 +106,16 @@ def remove_table_of_contents(sents):
     kept, removed = [], []
     for s in sents:
         ss = s.strip().lower()
-        if (
-            ss.startswith("table of contents")
-            or ss.startswith("contents")
-            or re.search(r"\.{6,}", ss)
-            or re.search(r"-\s*-\s*-", ss)
-        ):
+        if ss.startswith(("table of contents", "contents")) or re.search(r"\.{6,}", ss) or re.search(r"-\s*-\s*-", ss):
             removed.append(s)
         else:
             kept.append(s)
     return kept, removed
 
-# --- Strict ALLCAPS remover ---
 def _normalize_line(s): return re.sub(r"\s+", " ", unicodedata.normalize("NFKC", s)).strip()
 def _is_allcaps_token(t):
     t = t.strip(",.;:()[]{}&/-")
-    if not t or t == "I": return False
-    return t.isdigit() or (t.isupper() and any(c.isalpha() for c in t))
+    return bool(t) and (t.isdigit() or (t.isupper() and any(c.isalpha() for c in t)))
 def _is_allcaps_line(s):
     toks = [w for w in _normalize_line(s).split() if w.strip(",.;:()[]{}&/-")]
     return len(toks) > 2 and all(_is_allcaps_token(w) for w in toks)
@@ -157,34 +124,31 @@ def remove_head(sents):
     for s in sents:
         s = _normalize_line(s)
         orig = s
-        if _is_allcaps_line(s):
-            removed.append(orig); continue
+        if _is_allcaps_line(s): removed.append(orig); continue
         m = re.match(r"^([A-Z0-9 ,/&\-\(\)]+[:\,])\s*(.*)$", s)
         if m:
             head, rest = m.group(1).rstrip(",: "), m.group(2).strip()
-            if _is_allcaps_line(head):
-                removed.append(head); s = rest
+            if _is_allcaps_line(head): removed.append(head); s = rest
         s = re.sub(r"\b(?:[A-Z0-9&/\-]{3,}(?: [A-Z0-9&/\-]{2,})+)\b", "", s)
         s = re.sub(r"\s{2,}", " ", s).strip()
-        if s and not _is_allcaps_line(s):
-            out.append(s)
-        else:
-            removed.append(orig)
+        if s and not _is_allcaps_line(s): out.append(s)
+        else: removed.append(orig)
     return out, removed
 
-# --- Digit %, Sentence Length, Grammar ---
 def calc_digit_pct(s): return 100 * sum(c.isdigit() for c in s) / max(1, len(s))
 def remove_too_much_digit(sents, th=30):
     kept, rem = [], []
     for s in sents:
         (rem if calc_digit_pct(s) >= th else kept).append(s)
     return kept, rem
+
 def remove_long_short_sentence(sents, minw=6, maxw=None):
     kept, rem = [], []
     for s in sents:
         wc = len(s.split())
         (rem if wc < minw or (maxw and wc > maxw) else kept).append(s)
     return kept, rem
+
 def is_full_sentence_spacy(s):
     if _SPACY_OK and nlp is not None:
         doc = nlp(s)
@@ -198,63 +162,75 @@ def remove_phrase(sents):
         (kept if is_full_sentence_spacy(s) else rem).append(s)
     return kept, rem
 
-# --- Main Pipeline ---
 def pdf_to_clean_sentences(pdf_path: str, out_prefix: str):
     removed_all = []
     raw = extract_text_from_pdf_positional_auto(pdf_path)
     raw = help_ie(raw)
     sents = tokenize_sentences(raw)
-
     kept, rem = remove_table_of_contents(sents); removed_all += rem
     kept, rem = remove_head(kept); removed_all += rem
     kept = split_bullet(kept); kept = split_number_bullet(kept)
     kept, rem = remove_long_short_sentence(kept); removed_all += rem
     kept, rem = remove_phrase(kept); removed_all += rem
     kept, rem = remove_too_much_digit(kept); removed_all += rem
-
     kept = remove_URLs(kept); kept = remove_special_chars(kept); kept = remove_extra_whitespace(kept)
     kept = [s for s in kept if s.strip()]
-    removed_all = [s for s in removed_all if s.strip()]
-
     df = pd.DataFrame({"Sentence Index": range(1, len(kept)+1), "Sentence": kept})
     return df
 
-# =========================
-# 🌐 Streamlit UI
-# =========================
+# =============================
+# 🎨 Streamlit UI
+# =============================
 st.set_page_config(page_title="PDF Sentence Cleaner", page_icon="📘", layout="wide")
-st.title("📘 PDF Sentence Cleaner — By 802 Squad")
 
-uploaded_file = st.file_uploader("อัปโหลดไฟล์ PDF", type=["pdf"])
+st.markdown("""
+<h1 style='text-align:center; color:#E67E22;'>📘 PDF Sentence Cleaner — By 802 Squad</h1>
+<p style='text-align:center; color:#B9770E; font-size:17px;'>
+เวอร์ชันตรงกับโค้ดต้นฉบับ พร้อมระบบตัดประโยคอัตโนมัติ, Header/Footer Cleaner, และ Export Excel
+</p>
+<hr style='border:1px solid #FAD7A0'>
+""", unsafe_allow_html=True)
+
+uploaded_file = st.file_uploader("📤 อัปโหลดไฟล์ PDF", type=["pdf"])
 
 if uploaded_file is not None:
-    with st.spinner("กำลังประมวลผล..."):
-        base_name = os.path.splitext(uploaded_file.name)[0]
-        pdf_path = f"/tmp/{uploaded_file.name}"
-        with open(pdf_path, "wb") as f:
-            f.write(uploaded_file.getvalue())
+    base_name = os.path.splitext(uploaded_file.name)[0]
+    pdf_path = f"/tmp/{uploaded_file.name}"
+    with open(pdf_path, "wb") as f:
+        f.write(uploaded_file.getvalue())
 
+    with st.spinner("⏳ กำลังตัดประโยคและทำความสะอาดไฟล์ของคุณ..."):
+        progress = st.progress(0)
+        for i in range(100):
+            time.sleep(0.01)
+            progress.progress(i + 1)
         df_output = pdf_to_clean_sentences(pdf_path, out_prefix=base_name)
 
-        # ✅ Export to Excel
-        output = io.BytesIO()
-        df_output.to_excel(output, index=False)
-        output.seek(0)
+    output = io.BytesIO()
+    df_output.to_excel(output, index=False)
+    output.seek(0)
+    xlsx_name = f"{base_name}_cleaned.xlsx"
 
-        xlsx_name = f"{base_name}_cleaned.xlsx"
+    st.success(f"✅ เสร็จสิ้น — ตัดตามโค้ดของคุณทุกขั้นตอน ({base_name})")
+    st.download_button(
+        f"⬇️ ดาวน์โหลดไฟล์ผลลัพธ์ ({xlsx_name})",
+        data=output.getvalue(),
+        file_name=xlsx_name,
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key=f"download_{xlsx_name}"
+    )
 
-        st.success(f"✅ เสร็จสิ้น — ตัดตามโค้ดของคุณทุกขั้นตอน ({base_name})")
+    with st.expander("🔍 ดูตัวอย่าง (20 บรรทัดแรก)"):
+        st.dataframe(df_output.head(20), use_container_width=True, hide_index=True)
 
-        st.download_button(
-            f"⬇️ ดาวน์โหลดไฟล์ผลลัพธ์ ({xlsx_name})",
-            data=output.getvalue(),
-            file_name=xlsx_name,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key=f"download_{xlsx_name}"
-        )
+st.sidebar.markdown("### 🧾 คำอธิบายระบบ")
+st.sidebar.info("ระบบจะตัดประโยคจากไฟล์ PDF และทำความสะอาดข้อความโดยอัตโนมัติ เช่น ลบหัวกระดาษ ตัวหนา Header/Footer และตัดคำแบบละเอียดตามโค้ดของคุณ")
 
-        with st.expander("🔍 ดูตัวอย่าง (20 บรรทัดแรก)"):
-            st.dataframe(df_output.head(20))
+st.sidebar.markdown("---")
+st.sidebar.markdown("👨‍💻 **ทีมพัฒนา:** 802 Squad  \n📅 2025 | Chiang Mai University")
+
+st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025 802 Squad | Developed by Punyawee Wutti</p>", unsafe_allow_html=True)
+
 
 
 
