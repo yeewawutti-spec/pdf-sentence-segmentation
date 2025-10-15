@@ -236,6 +236,14 @@ st.sidebar.markdown("""
 
 
 st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025  | Developed by 802 Squad</p>", unsafe_allow_html=True)
+[data-testid="stFileUploader"] {
+    background: rgba(255, 255, 255, 0.95);       /* สีพื้นในกรอบ */
+    border: 2px dashed #B97A3D;                  /* ✅ สีน้ำตาลทอง (เหมือนในภาพ) */
+    border-radius: 15px;                         /* มุมโค้ง */
+    padding: 25px;                               /* ระยะห่างในกล่อง */
+    box-shadow: 0px 2px 8px rgba(185, 122, 61, 0.25);  /* เงาโทนน้ำตาลอ่อน */
+}
+
 
 
 
