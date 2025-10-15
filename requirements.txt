@@ -3,3 +3,4 @@ PyMuPDF
 spacy
 pandas
 nltk
+xlsxwriter
