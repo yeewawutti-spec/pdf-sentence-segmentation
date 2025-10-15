@@ -231,11 +231,12 @@ st.sidebar.markdown("""
 🎓 ACCBA’65 <br>
 📅 2025 | Chiang Mai University <br>
 💼 Faculty of Accountancy and Business Administration <br>
-🍊 <b>Developer:</b> 802 Squad
+👩🏻‍💻 <b>Developer:</b> 802 Squad
 """, unsafe_allow_html=True)
 
 
 st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025 802 Squad | Developed by 802 Squad</p>", unsafe_allow_html=True)
+
 
 
 
