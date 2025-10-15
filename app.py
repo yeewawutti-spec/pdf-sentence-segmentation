@@ -268,7 +268,7 @@ def pdf_to_clean_sentences(pdf_bytes):
 
 # ============= STREAMLIT APP =============
 st.set_page_config(page_title="PDF Sentence Cleaner", layout="wide")
-st.title("📘 PDF Sentence Cleaner (เหมือนโค้ดของคุณเป๊ะ)")
+st.title("📘 PDF Sentence Cleaner (ยี่หวาสวยมาก)")
 
 uploaded_file = st.file_uploader("อัปโหลดไฟล์ PDF", type=["pdf"])
 
@@ -292,3 +292,4 @@ if uploaded_file:
 
     with st.expander("🔍 ดูตัวอย่างประโยคที่เก็บไว้"):
         st.dataframe(df_kept.head(30))
+
