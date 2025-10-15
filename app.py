@@ -1,3 +1,4 @@
+!pip install PyMuPDF
 #แบบที่ยังไม่ตัด header, footer
 # -*- coding: utf-8 -*-
 """
@@ -1148,3 +1149,4 @@ except FileNotFoundError:
     print(f"Error: The file {output_csv_path} was not found.")
 except Exception as e:
     print(f"An error occurred: {e}")
+
