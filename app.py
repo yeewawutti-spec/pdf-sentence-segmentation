@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-PDF Sentence Cleaner — Orange Theme Edition
+PDF Sentence Segmentation — Orange Theme Edition
 เวอร์ชันตรงกับโค้ดของคุณ (draft_no_3) + ตกแต่งสีส้มอบอุ่น
 """
 
@@ -184,7 +184,7 @@ def pdf_to_clean_sentences(pdf_path: str, out_prefix: str):
 st.set_page_config(page_title="PDF Sentence Cleaner", page_icon="📘", layout="wide")
 
 st.markdown("""
-<h1 style='text-align:center; color:#E67E22;'>📘 PDF Sentence Cleaner — By 802 Squad</h1>
+<h1 style='text-align:center; color:#E67E22;'>📘 PDF Sentence Segmentation — By 802 Squad</h1>
 <p style='text-align:center; color:#B9770E; font-size:17px;'>
 ✨ อัปโหลดไฟล์ PDF เพื่อทดลองระบบตัดประโยคอัตโนมัติแปลงข้อความเป็น Excel ภายในไม่กี่วินาที
 </p>
@@ -261,6 +261,7 @@ button[kind="secondary"]:hover {
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 
