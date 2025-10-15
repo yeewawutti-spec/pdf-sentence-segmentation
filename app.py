@@ -1,199 +1,40 @@
-import streamlit as st
+# -*- coding: utf-8 -*-
+"""
+PDF Sentence Segmentation — Orange Theme Edition
+เวอร์ชันตรงกับโค้ดของคุณ (draft_no_3) + ตกแต่งสีส้มอบอุ่น
+"""
+
 import os
+import io
 import re
-import csv
-import math
-import fitz  # PyMuPDF
+import fitz
 import nltk
 import spacy
 import pandas as pd
 import unicodedata
-from io import BytesIO
+import streamlit as st
+import time
 
-# ================== INITIAL SETUP ==================
-nltk.download('punkt', quiet=True)
-nltk.download('punkt_tab', quiet=True)
+# =============================
+# 🔧 Setup
+# =============================
+nltk.download("punkt", quiet=True)
+nltk.download("punkt_tab", quiet=True)
 
-_SPACY_OK = True
 try:
     nlp = spacy.load("en_core_web_sm")
+    _SPACY_OK = True
 except Exception:
-    _SPACY_OK = False
     nlp = None
+    _SPACY_OK = False
 
-# ================ HELPER FUNCTIONS =================
-def help_ie(s: str) -> str:
-    s = re.sub(r'\bi\.e\.(?=\s*\w)(?!\s*,)', 'i.e.,', s, flags=re.IGNORECASE)
-    s = re.sub(r'\be\.g\.(?=\s*\w)(?!\s*,)', 'e.g.,', s, flags=re.IGNORECASE)
-    s = re.sub(r'\bNo\.(?=\s*\w)(?!\s*,)',  'No.,',  s, flags=re.IGNORECASE)
-    return s
+# =============================
+# 🧠 Functions
+# =============================
 
-def tokenize_sentences(text: str):
-    from nltk.tokenize import sent_tokenize
-    return sent_tokenize(text)
-
-def remove_extra_whitespace(sentences):
-    return [re.sub(r"\s+", " ", s).strip() for s in sentences]
-
-def remove_URLs(sentences):
-    pat = re.compile(r'(https?://\S+|www\.\S+)')
-    processed_sentences = []
-    for s in sentences:
-        match = pat.search(s)
-        if match and match.end() == len(s):
-            processed_s = pat.sub("URL.", s)
-        else:
-            processed_s = pat.sub("URL", s)
-        processed_sentences.append(processed_s)
-    return processed_sentences
-
-def remove_special_chars(sentences):
-    table = str.maketrans("", "", "•*#+|")
-    return [s.translate(table) for s in sentences]
-
-def split_bullet(sentences):
-    out = []
-    for s in sentences:
-        parts = [p.strip() for p in re.split(r"[•]", s) if p.strip()]
-        out.extend(parts)
-    return out
-
-def split_number_bullet(sentences):
-    out = []
-    for s in sentences:
-        tokens = s.split()
-        idxs = [i for i, w in enumerate(tokens) if re.fullmatch(r"\(\d+\)", w)]
-        if len(idxs) >= 2:
-            start = 0
-            for i in range(1, len(idxs)):
-                if idxs[i] - idxs[i-1] >= 6:
-                    out.append(" ".join(tokens[start:idxs[i]]).strip())
-                    start = idxs[i]
-            out.append(" ".join(tokens[start:]).strip())
-        else:
-            out.append(s)
-    return [s for s in out if s]
-
-def remove_table_of_contents(sentences):
-    removed, kept = [], []
-    for s in sentences:
-        ss = s.strip()
-        if (ss.lower().startswith("table of contents")
-            or ss.lower().startswith("contents")
-            or re.search(r"\.{6,}", ss)
-            or re.search(r"-\s*-\s*-", ss)):
-            removed.append(s)
-        else:
-            kept.append(s)
-    return kept, removed
-
-# ============ STRICT ALLCAPS REMOVER ============
-def _normalize_line(s: str) -> str:
-    s = unicodedata.normalize("NFKC", s)
-    s = re.sub(r"\s+", " ", s).strip()
-    return s
-
-def _is_allcaps_token(tok: str) -> bool:
-    t = tok.strip(",.;:()[]{}&/-")
-    if not t:
-        return False
-    if t == "I":
-        return False
-    return t.isdigit() or (t.isupper() and any(c.isalpha() for c in t))
-
-def _is_allcaps_line(s: str) -> bool:
-    s = _normalize_line(s)
-    tokens = [w for w in s.split() if w.strip(",.;:()[]{}&/-")]
-    if len(tokens) <= 2:
-        return False
-    return all(_is_allcaps_token(w) for w in tokens)
-
-def remove_head(sentences):
-    out, removed = [], []
-    for s in sentences:
-        s = _normalize_line(s)
-        original = s
-        if _is_allcaps_line(s):
-            removed.append(original)
-            continue
-        m = re.match(r'^([A-Z0-9 ,/&\-\(\)]+[:\,])\s*(.*)$', s)
-        if m:
-            head, rest = m.group(1).rstrip(",: "), m.group(2).strip()
-            if _is_allcaps_line(head):
-                removed.append(head)
-                s = rest
-            else:
-                s = original
-        if s and _is_allcaps_line(s):
-            removed.append(original)
-            continue
-        s = re.sub(r'\b(?:[A-Z0-9&/\-]{3,}(?: [A-Z0-9&/\-]{2,})+)\b', '', s)
-        s = re.sub(r'\s{2,}', ' ', s).strip()
-        if s and _is_allcaps_line(s):
-            removed.append(original)
-            continue
-        if s:
-            out.append(s)
-        else:
-            removed.append(original)
-    return out, removed
-
-# =============== CLEANING HELPERS ===============
-def calculate_digit_percentage(s: str) -> float:
-    total = len(s)
-    if total == 0:
-        return 0.0
-    digits = sum(ch.isdigit() for ch in s)
-    return 100.0 * digits / total
-
-def remove_too_much_digit(sentences, threshold=30.0):
-    kept, removed = [], []
-    for s in sentences:
-        if calculate_digit_percentage(s) >= threshold:
-            removed.append(s)
-        else:
-            kept.append(s)
-    return kept, removed
-
-def remove_long_short_sentence(sentences, min_words=6, max_words=None):
-    kept, removed = [], []
-    for s in sentences:
-        wc = len(s.split())
-        if wc < min_words or (max_words and wc > max_words):
-            removed.append(s)
-        else:
-            kept.append(s)
-    return kept, removed
-
-def is_full_sentence_spacy(s: str) -> bool:
-    if _SPACY_OK and nlp is not None:
-        doc = nlp(s)
-        has_subj = any(tok.dep_ in ("nsubj","nsubjpass","csubj","csubjpass") for tok in doc)
-        has_pred = any(tok.pos_ in ("VERB","AUX") or tok.dep_=="ROOT" for tok in doc)
-        return has_subj and has_pred
-    has_verb = bool(re.search(r"\b(am|is|are|was|were|be|been|being|do|does|did|has|have|had|will|shall|would|should|can|could|may|might|must|[a-zA-Z]+ed|[a-zA-Z]+ing)\b", s, flags=re.I))
-    has_noun = bool(re.search(r"\b(I|you|he|she|it|we|they|the|a|an|this|that|these|those|[A-Z][a-z]+)\b", s))
-    return has_verb and has_noun
-
-def remove_phrase(sentences):
-    kept, removed = [], []
-    for s in sentences:
-        if is_full_sentence_spacy(s):
-            kept.append(s)
-        else:
-            removed.append(s)
-    return kept, removed
-
-# ============ EXTRACT FUNCTION =============
-def extract_text_from_pdf_positional_auto(file_path: str):
-    header_margin = 60
-    footer_margin = 60
-    left_margin = 0
-    right_margin = 0
-    granularity = "spans"
-    remove_bold_all = True
-    remove_bold_lines = False
-
+def extract_text_from_pdf_positional_auto(file_path, header_margin=60.0, footer_margin=60.0, left_margin=0.0, right_margin=0.0,
+                                          remove_bold_all=True):
+    """Extract text by removing header/footer and bold spans automatically."""
     def _is_inside(bbox, left, top, right, bottom):
         x0, y0, x1, y1 = bbox
         return (y1 <= bottom and y0 >= top and x0 >= left and x1 <= right)
@@ -201,97 +42,190 @@ def extract_text_from_pdf_positional_auto(file_path: str):
     def _span_is_bold(span):
         font = span.get("font", "") or ""
         flags = int(span.get("flags", 0) or 0)
-        by_name = bool(re.search(r"(?i)(bold|black|heavy|semibold|demi)", font))
-        by_flags = bool(flags & 2)
-        return by_name or by_flags
+        return bool(re.search(r"(?i)(bold|black|heavy|semibold|demi)", font)) or bool(flags & 2)
 
     pages_text = []
     with fitz.open(file_path) as doc:
         for page in doc:
-            top = page.rect.y0 + header_margin
-            bottom = page.rect.y1 - footer_margin
-            left = page.rect.x0 + left_margin
-            right = page.rect.x1 - right_margin
-
+            top, bottom = page.rect.y0 + header_margin, page.rect.y1 - footer_margin
+            left, right = page.rect.x0 + left_margin, page.rect.x1 - right_margin
             pdict = page.get_text("dict")
             line_buf = []
             for block in pdict.get("blocks", []):
-                if block.get("type", 0) != 0:
-                    continue
+                if block.get("type", 0) != 0: continue
                 for line in block.get("lines", []):
                     spans_in_line = []
                     for span in line.get("spans", []):
                         text = span.get("text", "")
                         bbox = span.get("bbox", None)
-                        if not text or not bbox:
-                            continue
-                        if not _is_inside(bbox, left, top, right, bottom):
-                            continue
-                        if remove_bold_all and _span_is_bold(span):
-                            continue
+                        if not bbox or not text: continue
+                        if not _is_inside(bbox, left, top, right, bottom): continue
+                        if remove_bold_all and _span_is_bold(span): continue
                         spans_in_line.append(text)
                     if spans_in_line:
-                        merged = " ".join(spans_in_line)
-                        merged = re.sub(r"\s+", " ", merged).strip()
-                        if merged:
-                            line_buf.append(merged)
+                        merged = re.sub(r"[ \t]+", " ", "".join(spans_in_line)).strip()
+                        if merged: line_buf.append(merged)
             pages_text.append("\n".join(line_buf))
     return "\n".join(pages_text)
 
-# ============= PIPELINE =============
-def pdf_to_clean_sentences(pdf_bytes):
-    temp_path = "temp.pdf"
-    with open(temp_path, "wb") as f:
-        f.write(pdf_bytes)
-    raw = extract_text_from_pdf_positional_auto(temp_path)
+
+def help_ie(s: str) -> str:
+    s = re.sub(r"\bi\.e\.(?=\s*\w)(?!\s*,)", "i.e.,", s, flags=re.I)
+    s = re.sub(r"\be\.g\.(?=\s*\w)(?!\s*,)", "e.g.,", s, flags=re.I)
+    return s
+
+def tokenize_sentences(text: str):
+    from nltk.tokenize import sent_tokenize
+    return sent_tokenize(text)
+
+def remove_extra_whitespace(sents): return [re.sub(r"\s+", " ", s).strip() for s in sents]
+def remove_URLs(sents): return [re.sub(r"https?://\S+|www\.\S+", "URL", s) for s in sents]
+def remove_special_chars(sents): return [s.translate(str.maketrans("", "", "•*#+|")) for s in sents]
+def split_bullet(sents):
+    out = []
+    for s in sents:
+        out.extend([p.strip() for p in re.split(r"[•]", s) if p.strip()])
+    return out
+def split_number_bullet(sents):
+    out = []
+    for s in sents:
+        toks = s.split()
+        idxs = [i for i, w in enumerate(toks) if re.fullmatch(r"\(\d+\)", w)]
+        if len(idxs) >= 2:
+            start = 0
+            for i in range(1, len(idxs)):
+                if idxs[i] - idxs[i - 1] >= 6:
+                    out.append(" ".join(toks[start:idxs[i]]).strip())
+                    start = idxs[i]
+            out.append(" ".join(toks[start:]).strip())
+        else:
+            out.append(s)
+    return [s for s in out if s]
+
+def remove_table_of_contents(sents):
+    kept, removed = [], []
+    for s in sents:
+        ss = s.strip().lower()
+        if ss.startswith(("table of contents", "contents")) or re.search(r"\.{6,}", ss) or re.search(r"-\s*-\s*-", ss):
+            removed.append(s)
+        else:
+            kept.append(s)
+    return kept, removed
+
+def _normalize_line(s): return re.sub(r"\s+", " ", unicodedata.normalize("NFKC", s)).strip()
+def _is_allcaps_token(t):
+    t = t.strip(",.;:()[]{}&/-")
+    return bool(t) and (t.isdigit() or (t.isupper() and any(c.isalpha() for c in t)))
+def _is_allcaps_line(s):
+    toks = [w for w in _normalize_line(s).split() if w.strip(",.;:()[]{}&/-")]
+    return len(toks) > 2 and all(_is_allcaps_token(w) for w in toks)
+def remove_head(sents):
+    out, removed = [], []
+    for s in sents:
+        s = _normalize_line(s)
+        orig = s
+        if _is_allcaps_line(s): removed.append(orig); continue
+        m = re.match(r"^([A-Z0-9 ,/&\-\(\)]+[:\,])\s*(.*)$", s)
+        if m:
+            head, rest = m.group(1).rstrip(",: "), m.group(2).strip()
+            if _is_allcaps_line(head): removed.append(head); s = rest
+        s = re.sub(r"\b(?:[A-Z0-9&/\-]{3,}(?: [A-Z0-9&/\-]{2,})+)\b", "", s)
+        s = re.sub(r"\s{2,}", " ", s).strip()
+        if s and not _is_allcaps_line(s): out.append(s)
+        else: removed.append(orig)
+    return out, removed
+
+def calc_digit_pct(s): return 100 * sum(c.isdigit() for c in s) / max(1, len(s))
+def remove_too_much_digit(sents, th=30):
+    kept, rem = [], []
+    for s in sents:
+        (rem if calc_digit_pct(s) >= th else kept).append(s)
+    return kept, rem
+
+def remove_long_short_sentence(sents, minw=6, maxw=None):
+    kept, rem = [], []
+    for s in sents:
+        wc = len(s.split())
+        (rem if wc < minw or (maxw and wc > maxw) else kept).append(s)
+    return kept, rem
+
+def is_full_sentence_spacy(s):
+    if _SPACY_OK and nlp is not None:
+        doc = nlp(s)
+        has_subj = any(tok.dep_ in ("nsubj", "nsubjpass", "csubj") for tok in doc)
+        has_pred = any(tok.pos_ in ("VERB", "AUX") or tok.dep_ == "ROOT" for tok in doc)
+        return has_subj and has_pred
+    return bool(re.search(r"\b(is|are|was|were|has|have|had|will|should|can|may|[a-zA-Z]+ed|[a-zA-Z]+ing)\b", s, re.I))
+def remove_phrase(sents):
+    kept, rem = [], []
+    for s in sents:
+        (kept if is_full_sentence_spacy(s) else rem).append(s)
+    return kept, rem
+
+def pdf_to_clean_sentences(pdf_path: str, out_prefix: str):
+    removed_all = []
+    raw = extract_text_from_pdf_positional_auto(pdf_path)
     raw = help_ie(raw)
     sents = tokenize_sentences(raw)
-    kept, rem = remove_table_of_contents(sents)
-    removed_all = rem
-    kept, rem = remove_head(kept)
-    removed_all += rem
-    kept = split_bullet(kept)
-    kept = split_number_bullet(kept)
-    kept, rem = remove_long_short_sentence(kept)
-    removed_all += rem
-    kept, rem = remove_phrase(kept)
-    removed_all += rem
-    kept, rem = remove_too_much_digit(kept)
-    removed_all += rem
-    kept = remove_URLs(kept)
-    kept = remove_special_chars(kept)
-    kept = remove_extra_whitespace(kept)
+    kept, rem = remove_table_of_contents(sents); removed_all += rem
+    kept, rem = remove_head(kept); removed_all += rem
+    kept = split_bullet(kept); kept = split_number_bullet(kept)
+    kept, rem = remove_long_short_sentence(kept); removed_all += rem
+    kept, rem = remove_phrase(kept); removed_all += rem
+    kept, rem = remove_too_much_digit(kept); removed_all += rem
+    kept = remove_URLs(kept); kept = remove_special_chars(kept); kept = remove_extra_whitespace(kept)
     kept = [s for s in kept if s.strip()]
-    removed_all = [s for s in removed_all if s.strip()]
-    os.remove(temp_path)
-    return kept, removed_all
+    df = pd.DataFrame({"Sentence Index": range(1, len(kept)+1), "Sentence": kept})
+    return df
 
-# ============= STREAMLIT APP =============
-st.set_page_config(page_title="PDF Sentence Cleaner", layout="wide")
-st.title("📘 PDF Sentence Cleaner (เหมือนโค้ดของคุณเป๊ะ)")
+# =============================
+# 🎨 Streamlit UI
+# =============================
+st.set_page_config(page_title="PDF Sentence Cleaner", page_icon="📘", layout="wide")
 
-uploaded_file = st.file_uploader("อัปโหลดไฟล์ PDF", type=["pdf"])
+st.markdown("""
+<h1 style='text-align:center; color:#E67E22;'>📘 PDF Sentence Segmentation — By 802 Squad</h1>
+<p style='text-align:center; color:#B9770E; font-size:17px;'>
+✨ อัปโหลดไฟล์ PDF เพื่อทดลองระบบตัดประโยคอัตโนมัติแปลงข้อความเป็น Excel ภายในไม่กี่วินาที
+</p>
+<hr style='border:1px solid #FAD7A0'>
+""", unsafe_allow_html=True)
 
-if uploaded_file:
-    with st.spinner("⏳ กำลังประมวลผล..."):
-        pdf_bytes = uploaded_file.read()
-        kept, removed = pdf_to_clean_sentences(pdf_bytes)
-        df_kept = pd.DataFrame({"Sentence Index": range(1, len(kept)+1), "Sentence": kept})
-        df_removed = pd.DataFrame({"Sentence Index": range(1, len(removed)+1), "Sentence": removed})
+uploaded_file = st.file_uploader("📤 อัปโหลดไฟล์ PDF", type=["pdf"])
 
-    st.success("✅ ประมวลผลเสร็จเรียบร้อย!")
+if uploaded_file is not None:
+    base_name = os.path.splitext(uploaded_file.name)[0]
+    pdf_path = f"/tmp/{uploaded_file.name}"
+    with open(pdf_path, "wb") as f:
+        f.write(uploaded_file.getvalue())
 
-    # ดาวน์โหลด Excel
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        df_kept.to_excel(writer, sheet_name="Kept", index=False)
-        df_removed.to_excel(writer, sheet_name="Removed", index=False)
-    st.download_button("⬇️ ดาวน์โหลดผลลัพธ์ (.xlsx)", data=output.getvalue(),
-                       file_name="Cleaned_Sentences.xlsx",
-                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    with st.spinner("⏳ กำลังประมวลผลโปรดรอสักครู่..."):
+        progress = st.progress(0)
+        for i in range(100):
+            time.sleep(0.01)
+            progress.progress(i + 1)
+        df_output = pdf_to_clean_sentences(pdf_path, out_prefix=base_name)
 
-    with st.expander("🔍 ดูตัวอย่างประโยคที่เก็บไว้"):
-        st.dataframe(df_kept.head(30))
+    output = io.BytesIO()
+    df_output.to_excel(output, index=False)
+    output.seek(0)
+    xlsx_name = f"{base_name}_cleaned.xlsx"
+
+    st.success(f"✅ ประมวลผลเสร็จสิ้น! ({base_name})")
+    st.download_button(
+        f"📤 ดาวน์โหลดไฟล์ Excel ({xlsx_name})",
+        data=output.getvalue(),
+        file_name=xlsx_name,
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key=f"download_{xlsx_name}"
+    )
+
+    with st.expander("🔍 ดูตัวอย่าง (20 บรรทัดแรก)"):
+        st.dataframe(df_output.head(20), use_container_width=True, hide_index=True)
+
+st.sidebar.markdown("### 🧾 System Description")
+st.sidebar.info("ระบบนี้ทำหน้าที่ประมวลผลและแยกประโยคจากไฟล์ PDF โดยอัตโนมัติ พร้อมดำเนินการทำความสะอาดข้อความ เช่น การลบส่วนหัวและส่วนท้ายของเอกสาร (Header/Footer) การลบข้อความตัวหนา รวมถึงการตัดประโยคอย่างละเอียดตามโค้ดต้นฉบับที่กำหนดไว้")
+
 st.sidebar.markdown("---")
 st.sidebar.markdown("""
 🎓 ACCBA’65 <br>
@@ -299,6 +233,8 @@ st.sidebar.markdown("""
 👩🏻‍💻 <b>Developer:</b> 802 Squad
 💼 Faculty of Accountancy and Business Administration <br>
 """, unsafe_allow_html=True)
+
+
 st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025  | Developed by 802 Squad</p>", unsafe_allow_html=True)
 st.markdown("""
 <style>
@@ -325,10 +261,6 @@ button[kind="secondary"]:hover {
 }
 </style>
 """, unsafe_allow_html=True)
-
-
-
-
 
 
 
