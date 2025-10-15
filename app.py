@@ -186,7 +186,7 @@ st.set_page_config(page_title="PDF Sentence Cleaner", page_icon="📘", layout="
 st.markdown("""
 <h1 style='text-align:center; color:#E67E22;'>📘 PDF Sentence Cleaner — By 802 Squad</h1>
 <p style='text-align:center; color:#B9770E; font-size:17px;'>
-✨ อัปโหลดไฟล์ PDF เพื่อทดลองระบบตัดประโยคอัตโนมัติแปลงข้อความเป็น Excel ภายในไม่กี่วินาที พร้อมความแม่นยำระดับโค้ดต้นฉบับ
+✨ อัปโหลดไฟล์ PDF เพื่อทดลองระบบตัดประโยคอัตโนมัติแปลงข้อความเป็น Excel ภายในไม่กี่วินาที
 </p>
 <hr style='border:1px solid #FAD7A0'>
 """, unsafe_allow_html=True)
@@ -238,34 +238,43 @@ st.sidebar.markdown("""
 st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025  | Developed by 802 Squad</p>", unsafe_allow_html=True)
 st.markdown("""
 <style>
-/* ===== 🎨 พื้นหลังโทน Mocha Brown ===== */
+/* ===== 🎨 พื้นหลัง Mocha Brown ===== */
 .stApp {
     background: linear-gradient(180deg, #EDE0D4 0%, #E6CCB2 40%, #F3EDE4 100%);
-    color: #E67300;  /* ตัวหนังสือสีส้มอบอุ่น */
+    color: #3B2F2F; /* สีตัวอักษรหลัก */
     font-family: "Segoe UI", sans-serif;
 }
 
 /* ===== หัวข้อหลัก ===== */
-h1, h2, h3, h4, h5 {
-    color: #E67300 !important;
+h1, h2, h3 {
+    color: #1E1E1E !important;  /* สีดำ */
     font-weight: 800;
 }
 
-/* ===== เส้นคั่นส้มทอง ===== */
+/* ===== คำอธิบายใต้หัวข้อ ===== */
+.subtitle {
+    color: #2E8B57; /* สีเขียวเข้ม */
+    font-size: 1.05rem;
+    font-weight: 500;
+    margin-top: -10px;
+    margin-bottom: 25px;
+}
+
+/* ===== เส้นคั่น ===== */
 hr {
     border: none;
     height: 2px;
-    background: linear-gradient(90deg, #E67300 0%, #FFD7A0 100%);
+    background: linear-gradient(90deg, #A0522D 0%, #C19A6B 100%);
     border-radius: 2px;
 }
 
 /* ===== Upload Zone ===== */
 [data-testid="stFileUploader"] {
     background: rgba(255, 255, 255, 0.85);
-    border: 2px dashed #D98C4A;
-    border-radius: 16px;
+    border: 2px dashed #B8860B;
+    border-radius: 15px;
     padding: 25px;
-    box-shadow: 0px 2px 10px rgba(217, 140, 74, 0.2);
+    box-shadow: 0px 2px 10px rgba(139, 69, 19, 0.15);
 }
 
 /* ===== ปุ่ม Browse ===== */
@@ -284,20 +293,18 @@ button[kind="secondary"]:hover {
 
 /* ===== Footer ===== */
 footer, .footer {
-    color: #E67300;
+    color: #5A3E2B;
     text-align: center;
     font-weight: 600;
     margin-top: 40px;
 }
-
-/* ===== ลิงก์ / ตัวเน้น ===== */
-a, strong, b {
-    color: #E67300 !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
-
+# ===== ส่วนหัว + คำอธิบาย =====
+st.markdown("<h1>📘 PDF Sentence Cleaner — By 802 Squad</h1>", unsafe_allow_html=True)
+st.markdown("<p class='subtitle'>✨ อัปโหลดไฟล์ PDF เพื่อทดลองระบบตัดประโยคอัตโนมัติและแปลงข้อความเป็น Excel </p>", unsafe_allow_html=True)
+st.markdown("<hr>", unsafe_allow_html=True)
 
 
 
