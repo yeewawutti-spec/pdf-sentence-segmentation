@@ -295,13 +295,19 @@ if uploaded_file:
             df_kept.to_excel(writer, sheet_name="Kept", index=False)
             df_removed.to_excel(writer, sheet_name="Removed", index=False)
 
-    st.success("✅ เสร็จสิ้น — ตัดตามโค้ดของคุณทุกขั้นตอน!")
+       # ✅ ดึงชื่อไฟล์จริงจากไฟล์ที่อัปโหลด
+    base_name = os.path.splitext(uploaded_file.name)[0]
+    xlsx_name = f"{base_name}_cleaned.xlsx"
+
+    st.success(f"✅ เสร็จสิ้น — ตัดตามโค้ดของคุณทุกขั้นตอน ({base_name})")
+
     st.download_button(
-        "⬇️ ดาวน์โหลดไฟล์ผลลัพธ์ (.xlsx)",
+        f"⬇️ ดาวน์โหลดไฟล์ผลลัพธ์ ({xlsx_name})",
         data=output.getvalue(),
-        file_name="Sabina2024_cleaned.xlsx",
+        file_name=xlsx_name,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
 
     with st.expander("🔍 ดูตัวอย่าง (20 บรรทัดแรก)"):
         st.dataframe(df_kept.head(20))
@@ -317,6 +323,7 @@ if uploaded_file:
         file_name=xlsx_name,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
 
 
 
