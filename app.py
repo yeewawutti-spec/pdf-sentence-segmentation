@@ -302,8 +302,8 @@ footer, .footer {
 """, unsafe_allow_html=True)
 
 # ===== ส่วนหัว + คำอธิบาย =====
-st.markdown("<h1>📘 PDF Sentence Cleaner — By 802 Squad</h1>", unsafe_allow_html=True)
 st.markdown("<hr>", unsafe_allow_html=True)
+
 
 
 
