@@ -238,35 +238,61 @@ st.sidebar.markdown("""
 st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025  | Developed by 802 Squad</p>", unsafe_allow_html=True)
 st.markdown("""
 <style>
+/* ===== 🎨 พื้นหลังโทน Mocha Brown ===== */
 .stApp {
     background: linear-gradient(180deg, #EDE0D4 0%, #E6CCB2 40%, #F3EDE4 100%);
-    color: #3C2F2F;
+    color: #E67300;  /* ตัวหนังสือสีส้มอบอุ่น */
     font-family: "Segoe UI", sans-serif;
 }
-h1, h2, h3 {
-    color: #A0522D !important;
-    font-weight: 700;
+
+/* ===== หัวข้อหลัก ===== */
+h1, h2, h3, h4, h5 {
+    color: #E67300 !important;
+    font-weight: 800;
 }
+
+/* ===== เส้นคั่นส้มทอง ===== */
+hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, #E67300 0%, #FFD7A0 100%);
+    border-radius: 2px;
+}
+
+/* ===== Upload Zone ===== */
 [data-testid="stFileUploader"] {
-    background: #FAF6F2;
-    border: 2px dashed #A97455;
-    border-radius: 15px;
-    box-shadow: 0px 2px 10px rgba(169, 116, 85, 0.2);
+    background: rgba(255, 255, 255, 0.85);
+    border: 2px dashed #D98C4A;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0px 2px 10px rgba(217, 140, 74, 0.2);
 }
+
+/* ===== ปุ่ม Browse ===== */
 button[kind="secondary"] {
-    background: linear-gradient(90deg, #A97455, #C28E69);
+    background: linear-gradient(90deg, #E67300, #FF944D);
     color: white !important;
     font-weight: 600;
+    border-radius: 10px;
     border: none;
-    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 button[kind="secondary"]:hover {
-    background: linear-gradient(90deg, #C28E69, #D9A984);
+    background: linear-gradient(90deg, #FF944D, #FFB066);
+    transform: scale(1.03);
 }
+
+/* ===== Footer ===== */
 footer, .footer {
-    color: #6B3E26;
+    color: #E67300;
     text-align: center;
-    font-weight: 500;
+    font-weight: 600;
+    margin-top: 40px;
+}
+
+/* ===== ลิงก์ / ตัวเน้น ===== */
+a, strong, b {
+    color: #E67300 !important;
 }
 </style>
 """, unsafe_allow_html=True)
