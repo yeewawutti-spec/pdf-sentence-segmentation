@@ -238,58 +238,39 @@ st.sidebar.markdown("""
 st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025  | Developed by 802 Squad</p>", unsafe_allow_html=True)
 st.markdown("""
 <style>
-/* ===== 🎨 ไล่เฉดพื้นหลังโทนอบอุ่น (Soft Orange Gradient) ===== */
 .stApp {
-    background: linear-gradient(180deg, #FFF4E0 0%, #FFF8F2 40%, #FFFFFF 100%);
-    color: #3b3b3b;
+    background: linear-gradient(180deg, #EDE0D4 0%, #E6CCB2 40%, #F3EDE4 100%);
+    color: #3C2F2F;
     font-family: "Segoe UI", sans-serif;
 }
-
-/* ===== Header ===== */
-h1, h2, h3, h4, h5 {
-    color: #e67300 !important;
+h1, h2, h3 {
+    color: #A0522D !important;
     font-weight: 700;
 }
-
-/* ===== เส้นคั่นแบบบาง ๆ สีส้มอ่อน ===== */
-hr {
-    border: none;
-    height: 2px;
-    background: linear-gradient(90deg, rgba(255,153,51,0.8) 0%, rgba(255,204,153,0.2) 100%);
-    border-radius: 2px;
-}
-
-/* ===== กล่อง Upload Zone ===== */
 [data-testid="stFileUploader"] {
-    background: rgba(255, 255, 255, 0.8);
-    border: 2px dashed #ffa94d;
+    background: #FAF6F2;
+    border: 2px dashed #A97455;
     border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0px 2px 10px rgba(255, 170, 85, 0.15);
+    box-shadow: 0px 2px 10px rgba(169, 116, 85, 0.2);
 }
-
-/* ===== ปุ่ม Browse ===== */
 button[kind="secondary"] {
-    background: linear-gradient(90deg, #ffb84d, #ff944d);
+    background: linear-gradient(90deg, #A97455, #C28E69);
     color: white !important;
     font-weight: 600;
-    border-radius: 8px;
     border: none;
-    transition: 0.3s;
+    border-radius: 8px;
 }
 button[kind="secondary"]:hover {
-    background: linear-gradient(90deg, #ff944d, #ff751a);
+    background: linear-gradient(90deg, #C28E69, #D9A984);
 }
-
-/* ===== Footer ===== */
 footer, .footer {
-    color: #b85c00;
+    color: #6B3E26;
     text-align: center;
     font-weight: 500;
-    margin-top: 40px;
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 
