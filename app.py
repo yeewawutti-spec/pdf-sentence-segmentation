@@ -303,8 +303,8 @@ footer, .footer {
 
 # ===== ส่วนหัว + คำอธิบาย =====
 st.markdown("<h1>📘 PDF Sentence Cleaner — By 802 Squad</h1>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>✨ อัปโหลดไฟล์ PDF เพื่อทดลองระบบตัดประโยคอัตโนมัติและแปลงข้อความเป็น Excel </p>", unsafe_allow_html=True)
 st.markdown("<hr>", unsafe_allow_html=True)
+
 
 
 
