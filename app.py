@@ -235,7 +235,8 @@ st.sidebar.markdown("""
 """, unsafe_allow_html=True)
 
 
-st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025 802 Squad | Developed by 802 Squad</p>", unsafe_allow_html=True)
+st.markdown("<hr><p style='text-align:center; color:#BA4A00;'>© 2025  | Developed by 802 Squad</p>", unsafe_allow_html=True)
+
 
 
 
